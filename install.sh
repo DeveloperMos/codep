@@ -42,6 +42,21 @@ case ":$PATH:" in
   *) echo "Add $BIN_DIR to your PATH, for example: echo 'export PATH=\"$BIN_DIR:\$PATH\"' >> ~/.zshrc" ;;
 esac
 
+# An alias or function named codep in the shell runs instead of the program.
+conflicts=""
+for rc in .zshrc .zprofile .zshenv .bashrc .bash_profile .profile .config/fish/config.fish; do
+  [ -f "$HOME/$rc" ] || continue
+  lines=$(grep -nE '^[[:space:]]*(alias[[:space:]]+codep[=[:space:]]|codep[[:space:]]*\(\)|function[[:space:]]+codep([[:space:]]|$|\())' "$HOME/$rc" | cut -d: -f1 | tr '\n' ' ')
+  for n in $lines; do conflicts="$conflicts  $HOME/$rc:$n
+"; done
+done
+if [ -n "$conflicts" ]; then
+  echo
+  echo "Warning: your shell defines its own codep, which runs instead of this program:"
+  printf '%s' "$conflicts"
+  echo "Remove it and open a new terminal. Until then call this program as: command codep ..."
+fi
+
 if [ "$os" = darwin ]; then
   echo
   echo "Next:"

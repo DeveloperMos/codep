@@ -171,3 +171,23 @@ func TestLaunchdPlistIsValid(t *testing.T) {
 		t.Fatalf("%v: %s", err, out)
 	}
 }
+
+func TestShellConflicts(t *testing.T) {
+	home := t.TempDir()
+	os.WriteFile(filepath.Join(home, ".zshrc"), []byte("export A=1\n# alias codep='old'\nalias codep='osascript -e quit'\n"), 0o644)
+	os.WriteFile(filepath.Join(home, ".bashrc"), []byte("codep() { echo hi; }\nalias codepx=1\n"), 0o644)
+	os.MkdirAll(filepath.Join(home, ".config", "fish"), 0o755)
+	os.WriteFile(filepath.Join(home, ".config", "fish", "config.fish"), []byte("alias codep 'echo'\n"), 0o644)
+	got := shellConflicts(home)
+	want := []string{
+		filepath.Join(home, ".zshrc") + ":3",
+		filepath.Join(home, ".bashrc") + ":1",
+		filepath.Join(home, ".config", "fish", "config.fish") + ":1",
+	}
+	if !reflect.DeepEqual(got, want) {
+		t.Fatalf("got %v\nwant %v", got, want)
+	}
+	if c := shellConflicts(t.TempDir()); len(c) != 0 {
+		t.Fatalf("empty home: %v", c)
+	}
+}

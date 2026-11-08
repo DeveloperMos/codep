@@ -1,8 +1,10 @@
 package main
 
 import (
+	"fmt"
 	"os"
 	"path/filepath"
+	"regexp"
 	"strings"
 )
 
@@ -56,4 +58,46 @@ func appSupportName(app string) string {
 		return app
 	}
 	return ""
+}
+
+// shellRCFiles are the shell startup files checked for a conflicting codep
+// alias or function, relative to the home folder.
+var shellRCFiles = []string{".zshrc", ".zprofile", ".zshenv", ".bashrc", ".bash_profile", ".profile", ".config/fish/config.fish"}
+
+var conflictRE = regexp.MustCompile(`^\s*(alias\s+codep[=\s]|codep\s*\(\)|function\s+codep\b)`)
+
+// shellConflicts finds aliases and functions named codep in shell startup
+// files. The shell runs them instead of this program, so `codep uninstall`
+// would never reach it. Returns "file:line" entries.
+func shellConflicts(home string) []string {
+	var found []string
+	for _, name := range shellRCFiles {
+		path := filepath.Join(home, name)
+		data, err := os.ReadFile(path)
+		if err != nil {
+			continue
+		}
+		for i, line := range strings.Split(string(data), "\n") {
+			if conflictRE.MatchString(line) {
+				found = append(found, fmt.Sprintf("%s:%d", path, i+1))
+			}
+		}
+	}
+	return found
+}
+
+func warnShellConflicts() {
+	home, err := os.UserHomeDir()
+	if err != nil {
+		return
+	}
+	c := shellConflicts(home)
+	if len(c) == 0 {
+		return
+	}
+	fmt.Fprintln(os.Stderr, "\nWarning: your shell defines its own codep, which runs instead of this program:")
+	for _, f := range c {
+		fmt.Fprintln(os.Stderr, "  "+f)
+	}
+	fmt.Fprintln(os.Stderr, "Remove it and open a new terminal. Until then call this program as `command codep ...`.")
 }

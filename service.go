@@ -123,6 +123,7 @@ func runInstall(args []string) error {
 	if !up {
 		fmt.Printf("The bridge has not started listening on %s yet, check the log.\n", listen)
 	}
+	warnShellConflicts()
 	return nil
 }
 

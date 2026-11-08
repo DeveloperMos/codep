@@ -79,6 +79,27 @@ go install github.com/DeveloperMos/codep@latest
 
 5. In the new window, open a terminal and run `curl https://ifconfig.me`. You should see the proxy's IP, not yours.
 
+After that, `codep [path]` is all you run day to day. The bridge keeps running in the background and starts again after a reboot.
+
+## Start and stop the bridge
+
+The background bridge is a launchd service, so it needs no process manager.
+
+```bash
+codep install     # start it and add it to login items
+codep uninstall   # stop it and remove it from login items
+```
+
+To stop it for a while and keep it in login items:
+
+```bash
+launchctl bootout gui/$(id -u)/io.github.codep                                  # stop until the next login
+launchctl bootstrap gui/$(id -u) ~/Library/LaunchAgents/io.github.codep.plist   # start again
+launchctl kickstart -k gui/$(id -u)/io.github.codep                             # restart
+```
+
+`launchctl stop` doesn't work here: launchd restarts the service right away. To run the bridge without launchd, use `codep serve`; it stops with Ctrl+C.
+
 ## Two modes
 
 **Separate window (default).** `codep [path]` starts a second VS Code instance next to your regular one. Running `codep` again while it's open sends the new folder to the same proxied instance.
@@ -183,6 +204,16 @@ Bridge flags (`serve` and `install`):
 | `-check-interval` | `30s` | how often to check all proxies |
 | `-check-target` | `1.1.1.1:443` | where to connect when checking |
 | `-attempts` | `5` | how many proxies to try per connection |
+
+## Troubleshooting
+
+### `codep` does something else
+
+Your shell has an alias or function named `codep`, and the shell runs it instead of the program. Check with `type codep`. Remove the alias from your shell config (`~/.zshrc`, `~/.bashrc`, …) and open a new terminal. Until then, call the program as `command codep`, for example `command codep uninstall`. The install script and `codep install` warn when they find such an alias.
+
+### The proxied window doesn't open
+
+Check that the bridge runs: `curl -x socks5h://127.0.0.1:1080 https://ifconfig.me` should print the proxy's IP. If it doesn't, look at `~/Library/Logs/codep.log` and the dashboard. If you pass `--data-dir`, keep the path under 87 characters: VS Code creates a socket inside it, and macOS limits socket paths.
 
 ## Limitations
 
