@@ -90,6 +90,10 @@ codep install     # start it and add it to login items
 codep uninstall   # stop it and remove it from login items
 ```
 
+After `codep install`, macOS lists the bridge in System Settings under Background App Activity. The switch there turns it off as well.
+
+<img src="docs/background-service.png" width="620" alt="macOS System Settings, Background App Activity: codep, running in background">
+
 To stop it for a while and keep it in login items:
 
 ```bash
