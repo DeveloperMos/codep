@@ -1,0 +1,394 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>codep</title>
+<style>
+:root {
+  color-scheme: light;
+  --page: #f9f9f7;
+  --surface: #fcfcfb;
+  --ink: #0b0b0b;
+  --ink-2: #52514e;
+  --muted: #898781;
+  --grid: #e1e0d9;
+  --axis: #c3c2b7;
+  --border: rgba(11,11,11,0.10);
+  --down: #2a78d6;
+  --up: #eb6834;
+  --good: #0ca30c;
+  --bad: #d03b3b;
+  --warn: #b57d00;
+  --hover: rgba(11,11,11,0.04);
+  --accent: #2a78d6;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+    --page: #0d0d0d;
+    --surface: #1a1a19;
+    --ink: #f0efec;
+    --ink-2: #c3c2b7;
+    --muted: #898781;
+    --grid: #2c2c2a;
+    --axis: #383835;
+    --border: rgba(255,255,255,0.10);
+    --down: #3987e5;
+    --up: #d95926;
+    --warn: #fab219;
+    --hover: rgba(255,255,255,0.05);
+    --accent: #3987e5;
+  }
+}
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --page: #0d0d0d; --surface: #1a1a19; --ink: #f0efec; --ink-2: #c3c2b7;
+  --grid: #2c2c2a; --axis: #383835; --border: rgba(255,255,255,0.10);
+  --down: #3987e5; --up: #d95926; --warn: #fab219; --hover: rgba(255,255,255,0.05); --accent: #3987e5;
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0; background: var(--page); color: var(--ink);
+  font: 14px/1.45 system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+.wrap { max-width: 1200px; margin: 0 auto; padding: 24px 16px 48px; }
+header { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-bottom: 20px; }
+h1 { font-size: 20px; margin: 0; font-weight: 650; }
+.sub { color: var(--ink-2); font-size: 13px; margin-top: 2px; }
+.conn { font-size: 12px; color: var(--muted); display: flex; align-items: center; gap: 6px; }
+.conn .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--good); }
+.conn.off .dot { background: var(--bad); }
+button {
+  font: inherit; font-size: 13px; color: var(--ink); background: var(--surface);
+  border: 1px solid var(--border); border-radius: 8px; padding: 6px 12px; cursor: pointer;
+}
+button:hover:not(:disabled) { background: var(--hover); }
+button:disabled { color: var(--muted); cursor: default; }
+.card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 16px; margin-bottom: 16px; }
+.card h2 { font-size: 14px; font-weight: 600; margin: 0 0 12px; display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 8px; }
+.card h2 .hint { font-weight: 400; color: var(--muted); font-size: 12px; }
+.active-card { display: flex; gap: 16px; align-items: center; flex-wrap: wrap; justify-content: space-between; }
+.active-label { font-size: 12px; color: var(--muted); text-transform: uppercase; letter-spacing: .04em; }
+.active-addr { font-size: 22px; font-weight: 650; font-variant-numeric: tabular-nums; word-break: break-all; }
+.tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 12px; margin-bottom: 16px; }
+.tile { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 12px 14px; }
+.tile .k { font-size: 12px; color: var(--ink-2); }
+.tile .v { font-size: 22px; font-weight: 650; margin-top: 2px; }
+.tile .s { font-size: 12px; color: var(--muted); }
+.status { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; white-space: nowrap; }
+.status .ic { width: 16px; height: 16px; border-radius: 50%; display: inline-grid; place-items: center; font-size: 10px; color: #fff; font-weight: 700; }
+.status.alive .ic { background: var(--good); }
+.status.dead .ic { background: var(--bad); }
+.status.unknown .ic { background: var(--muted); }
+.chart-box { position: relative; }
+.legend { display: flex; gap: 16px; font-size: 12px; color: var(--ink-2); }
+.legend i { display: inline-block; width: 12px; height: 2px; border-radius: 1px; vertical-align: middle; margin-right: 6px; }
+svg text { font: 11px system-ui, -apple-system, "Segoe UI", sans-serif; font-variant-numeric: tabular-nums; }
+.tip {
+  position: absolute; pointer-events: none; background: var(--surface); color: var(--ink);
+  border: 1px solid var(--border); border-radius: 8px; padding: 8px 10px; font-size: 12px;
+  box-shadow: 0 4px 16px rgba(0,0,0,.12); display: none; white-space: nowrap; font-variant-numeric: tabular-nums;
+}
+.tip .row { display: flex; align-items: center; gap: 6px; }
+.tip .sw { width: 10px; height: 2px; border-radius: 1px; }
+.tip .t { color: var(--muted); margin-bottom: 4px; }
+.table-wrap { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; font-size: 13px; }
+th { text-align: left; font-weight: 500; color: var(--ink-2); font-size: 12px; padding: 6px 8px; border-bottom: 1px solid var(--grid); white-space: nowrap; }
+td { padding: 8px; border-bottom: 1px solid var(--grid); vertical-align: top; }
+td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+tr.is-active td { background: var(--hover); }
+td .err { color: var(--muted); font-size: 12px; max-width: 320px; word-break: break-word; }
+.badge { font-size: 11px; border: 1px solid var(--accent); color: var(--accent); border-radius: 999px; padding: 1px 8px; white-space: nowrap; }
+.events { max-height: 380px; overflow-y: auto; font-size: 13px; }
+.ev { display: grid; grid-template-columns: 70px 76px 1fr; gap: 8px; padding: 5px 0; border-bottom: 1px solid var(--grid); }
+.ev time { color: var(--muted); font-variant-numeric: tabular-nums; }
+.lvl { font-size: 12px; display: inline-flex; align-items: center; gap: 5px; }
+.lvl::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: var(--muted); }
+.lvl.warn::before { background: var(--warn); }
+.lvl.error::before { background: var(--bad); }
+.lvl.info::before { background: var(--good); }
+.empty { color: var(--muted); padding: 12px 0; }
+code { font: 12px ui-monospace, SFMono-Regular, Menlo, monospace; background: var(--hover); padding: 1px 5px; border-radius: 4px; }
+@media (max-width: 560px) {
+  .ev { grid-template-columns: 64px 1fr; }
+  .ev .lvl { display: none; }
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div>
+      <h1>codep</h1>
+      <div class="sub" id="sub">—</div>
+    </div>
+    <div style="display:flex;gap:12px;align-items:center">
+      <span class="conn" id="conn"><span class="dot"></span><span id="conn-text">connecting…</span></span>
+      <button id="check">Check all</button>
+    </div>
+  </header>
+
+  <div class="card active-card">
+    <div>
+      <div class="active-label">Active proxy</div>
+      <div class="active-addr" id="active-addr">—</div>
+      <div class="sub" id="active-meta"></div>
+    </div>
+    <div id="active-status"></div>
+  </div>
+
+  <div class="tiles" id="tiles"></div>
+
+  <div class="card">
+    <h2>Throughput, last 5 minutes
+      <span class="legend">
+        <span><i style="background:var(--down)"></i>Download ↓</span>
+        <span><i style="background:var(--up)"></i>Upload ↑</span>
+      </span>
+    </h2>
+    <div class="chart-box" id="chart-box">
+      <svg id="chart" width="100%" height="220" role="img" aria-label="Download and upload throughput chart"></svg>
+      <div class="tip" id="tip"></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Proxies <span class="hint" id="file-hint"></span></h2>
+    <div class="table-wrap">
+      <table>
+        <thead><tr>
+          <th>#</th><th>Status</th><th>Address</th><th>Login</th>
+          <th class="num">Latency</th><th class="num">Connections</th>
+          <th class="num">↓ Down</th><th class="num">↑ Up</th>
+          <th class="num">Drops</th><th class="num">Failures</th><th>Last error</th><th></th>
+        </tr></thead>
+        <tbody id="proxies"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Events <span class="hint">last 300</span></h2>
+    <div class="events" id="events"></div>
+  </div>
+</div>
+
+<script>
+const $ = s => document.querySelector(s);
+function setHTML(sel, html) { const el = $(sel); if (el._h !== html) { el.innerHTML = html; el._h = html; } }
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+
+function fmtBytes(n) {
+  const u = ['B', 'KB', 'MB', 'GB', 'TB'];
+  let i = 0;
+  while (n >= 1000 && i < u.length - 1) { n /= 1000; i++; }
+  return (i === 0 ? n : n.toFixed(n < 10 ? 2 : n < 100 ? 1 : 0)) + ' ' + u[i];
+}
+const fmtRate = n => fmtBytes(n) + '/s';
+const fmtNum = n => n.toLocaleString('en-US');
+function fmtDur(sec) {
+  const d = Math.floor(sec / 86400), h = Math.floor(sec % 86400 / 3600), m = Math.floor(sec % 3600 / 60), s = sec % 60;
+  if (d) return `${d}d ${h}h`;
+  if (h) return `${h}h ${m}m`;
+  if (m) return `${m}m ${s}s`;
+  return `${s}s`;
+}
+function ago(iso) {
+  if (!iso) return '';
+  const s = Math.max(0, Math.round((Date.now() - new Date(iso)) / 1000));
+  if (s < 60) return 'less than a minute ago';
+  return fmtDur(s - s % 60) + ' ago';
+}
+const hhmmss = d => new Date(d).toLocaleTimeString('en-GB', {hour12: false});
+
+const STATUS = {
+  alive:   {ic: '✓', text: 'alive'},
+  dead:    {ic: '✕', text: 'down'},
+  unknown: {ic: '?', text: 'checking'},
+};
+const statusHTML = s => `<span class="status ${s}"><span class="ic">${STATUS[s].ic}</span>${STATUS[s].text}</span>`;
+
+let last = null;
+
+function renderTiles(d) {
+  const t = [
+    ['Open connections', fmtNum(d.activeConns), `${fmtNum(d.totalConns)} total`],
+    ['Downloaded', fmtBytes(d.bytesDown), 'from the network'],
+    ['Uploaded', fmtBytes(d.bytesUp), 'to the network'],
+    ['Drops', fmtNum(d.drops), 'proxy cut the connection'],
+    ['Proxy failures', fmtNum(d.dialFails), 'no answer or auth rejected'],
+    ['Site errors', fmtNum(d.targetFails), 'proxy fine, site unreachable'],
+    ['Failovers', fmtNum(d.failovers), 'automatic'],
+    ['Uptime', fmtDur(d.uptimeSec), ''],
+  ];
+  setHTML('#tiles', t.map(([k, v, s]) =>
+    `<div class="tile"><div class="k">${k}</div><div class="v">${v}</div><div class="s">${s}</div></div>`).join(''));
+}
+
+function renderActive(d) {
+  const a = d.proxies.find(p => p.active);
+  if (!a) {
+    $('#active-addr').textContent = 'no proxies';
+    $('#active-meta').innerHTML = `Add proxies to <code>${esc(d.proxiesFile)}</code>`;
+    $('#active-status').innerHTML = '';
+    return;
+  }
+  $('#active-addr').textContent = a.addr;
+  const bits = [a.scheme.toUpperCase()];
+  if (a.user) bits.push('login ' + a.user);
+  if (a.latencyMs) bits.push(a.latencyMs + ' ms');
+  bits.push(`#${a.index + 1} of ${d.proxies.length}`);
+  $('#active-meta').textContent = bits.join(' · ');
+  $('#active-status').innerHTML = statusHTML(a.status);
+}
+
+function renderProxies(d) {
+  $('#file-hint').textContent = d.proxiesFile;
+  if (!d.proxies.length) {
+    setHTML('#proxies', `<tr><td colspan="12" class="empty">The list is empty. The file is re-read every 3 seconds.</td></tr>`);
+    return;
+  }
+  setHTML('#proxies', d.proxies.map(p => `
+    <tr class="${p.active ? 'is-active' : ''}">
+      <td class="num">${p.index + 1}</td>
+      <td>${statusHTML(p.status)}</td>
+      <td>${esc(p.addr)} <span style="color:var(--muted)">${esc(p.scheme)}</span></td>
+      <td>${esc(p.user)}</td>
+      <td class="num">${p.latencyMs ? p.latencyMs + ' ms' : '—'}</td>
+      <td class="num">${fmtNum(p.activeConns)} / ${fmtNum(p.conns)}</td>
+      <td class="num">${fmtBytes(p.down)}</td>
+      <td class="num">${fmtBytes(p.up)}</td>
+      <td class="num">${fmtNum(p.drops)}</td>
+      <td class="num">${fmtNum(p.dialFails)}</td>
+      <td><div class="err">${p.lastError ? esc(p.lastError) + '<br>' + ago(p.lastErrorAt) : ''}</div></td>
+      <td>${p.active ? '<span class="badge">active</span>' : `<button data-switch="${p.index}">Make active</button>`}</td>
+    </tr>`).join(''));
+}
+
+function renderEvents(d) {
+  if (!d.events.length) { setHTML('#events', '<div class="empty">Nothing yet</div>'); return; }
+  const LV = {info: 'info', warn: 'warning', error: 'error'};
+  setHTML('#events', d.events.map(e => `
+    <div class="ev"><time>${hhmmss(e.time)}</time><span class="lvl ${e.level}">${LV[e.level] || e.level}</span><span>${esc(e.msg)}</span></div>`).join(''));
+}
+
+// ---- chart ----
+const WINDOW = 300000;
+let hoverX = null;
+let chart = null;
+
+function niceMax(v) {
+  const raw = v / 4;
+  const p = Math.pow(10, Math.floor(Math.log10(raw)));
+  const step = [1, 2, 2.5, 5, 10].map(m => m * p).find(s => s >= raw);
+  return step * 4;
+}
+
+function drawChart(series) {
+  const svg = $('#chart');
+  const W = svg.clientWidth || 600, H = 220;
+  const m = {l: 64, r: 92, t: 10, b: 24};
+  const now = Date.now(), x0 = now - WINDOW;
+  const pts = series.filter(p => p.t >= x0);
+  const top = niceMax(Math.max(10000, ...pts.map(p => Math.max(p.up, p.down))));
+  const x = t => m.l + (t - x0) / WINDOW * (W - m.l - m.r);
+  const y = v => m.t + (1 - v / top) * (H - m.t - m.b);
+  chart = {pts, x, y, m, W, H};
+
+  let g = '';
+  for (let i = 0; i <= 4; i++) {
+    const v = top * i / 4, yy = y(v);
+    g += `<line x1="${m.l}" x2="${W - m.r}" y1="${yy}" y2="${yy}" stroke="${i ? 'var(--grid)' : 'var(--axis)'}" stroke-width="1"/>`;
+    g += `<text x="${m.l - 8}" y="${yy + 4}" text-anchor="end" fill="var(--muted)">${fmtRate(v)}</text>`;
+  }
+  for (let i = 0; i <= 5; i++) {
+    const t = x0 + i * 60000;
+    g += `<text x="${x(t)}" y="${H - 6}" text-anchor="middle" fill="var(--muted)">${i === 5 ? 'now' : `−${5 - i} min`}</text>`;
+  }
+  const path = key => pts.map((p, i) => `${i ? 'L' : 'M'}${x(p.t).toFixed(1)},${y(p[key]).toFixed(1)}`).join('');
+  if (pts.length > 1) {
+    g += `<path d="${path('up')}" fill="none" stroke="var(--up)" stroke-width="2" stroke-linejoin="round"/>`;
+    g += `<path d="${path('down')}" fill="none" stroke="var(--down)" stroke-width="2" stroke-linejoin="round"/>`;
+    const lp = pts[pts.length - 1];
+    let yd = y(lp.down), yu = y(lp.up);
+    if (Math.abs(yd - yu) < 14) { if (yd <= yu) { yd -= 7; yu += 7; } else { yd += 7; yu -= 7; } }
+    const ex = x(lp.t) + 8;
+    g += `<text x="${ex}" y="${yd + 4}" fill="var(--ink)">↓ ${fmtRate(lp.down)}</text>`;
+    g += `<text x="${ex}" y="${yu + 4}" fill="var(--ink-2)">↑ ${fmtRate(lp.up)}</text>`;
+  } else {
+    g += `<text x="${(m.l + W - m.r) / 2}" y="${H / 2}" text-anchor="middle" fill="var(--muted)">collecting data…</text>`;
+  }
+  g += `<g id="hover"></g>`;
+  g += `<rect id="hit" x="${m.l}" y="${m.t}" width="${W - m.l - m.r}" height="${H - m.t - m.b}" fill="transparent"/>`;
+  svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
+  svg.innerHTML = g;
+  const hit = $('#hit');
+  hit.addEventListener('mousemove', e => { hoverX = e.offsetX; showHover(); });
+  hit.addEventListener('mouseleave', () => { hoverX = null; showHover(); });
+  showHover();
+}
+
+function showHover() {
+  const tip = $('#tip'), layer = $('#hover');
+  if (hoverX == null || !chart || !chart.pts.length || !layer) { tip.style.display = 'none'; if (layer) layer.innerHTML = ''; return; }
+  const {pts, x, y, m, H, W} = chart;
+  let best = pts[0];
+  for (const p of pts) if (Math.abs(x(p.t) - hoverX) < Math.abs(x(best.t) - hoverX)) best = p;
+  const px = x(best.t);
+  layer.innerHTML =
+    `<line x1="${px}" x2="${px}" y1="${m.t}" y2="${H - m.b}" stroke="var(--axis)" stroke-width="1"/>` +
+    `<circle cx="${px}" cy="${y(best.up)}" r="4" fill="var(--up)" stroke="var(--surface)" stroke-width="2"/>` +
+    `<circle cx="${px}" cy="${y(best.down)}" r="4" fill="var(--down)" stroke="var(--surface)" stroke-width="2"/>`;
+  tip.innerHTML = `<div class="t">${hhmmss(best.t)}</div>
+    <div class="row"><span class="sw" style="background:var(--down)"></span>Download ${fmtRate(best.down)}</div>
+    <div class="row"><span class="sw" style="background:var(--up)"></span>Upload ${fmtRate(best.up)}</div>`;
+  tip.style.display = 'block';
+  const left = px + 12 + tip.offsetWidth > W ? px - 12 - tip.offsetWidth : px + 12;
+  tip.style.left = left + 'px';
+  tip.style.top = m.t + 'px';
+}
+
+function render(d) {
+  last = d;
+  $('#sub').innerHTML = `SOCKS5 <code>${esc(d.listen)}</code>` + (d.httpListen ? ` · HTTP <code>${esc(d.httpListen)}</code>` : '') + ' → active proxy';
+  renderActive(d);
+  renderTiles(d);
+  drawChart(d.series);
+  renderProxies(d);
+  renderEvents(d);
+}
+
+function setOnline(ok) {
+  $('#conn').classList.toggle('off', !ok);
+  $('#conn-text').textContent = ok ? 'live, updates every second' : 'bridge is not responding';
+}
+
+async function tick() {
+  try {
+    const r = await fetch('/api/stats', {cache: 'no-store'});
+    if (!r.ok) throw new Error(r.status);
+    render(await r.json());
+    setOnline(true);
+  } catch (e) {
+    setOnline(false);
+  }
+}
+
+document.addEventListener('click', async e => {
+  const b = e.target.closest('button[data-switch]');
+  if (b) { b.disabled = true; await fetch('/api/switch?index=' + b.dataset.switch, {method: 'POST'}); tick(); }
+});
+$('#check').addEventListener('click', async e => {
+  e.target.disabled = true;
+  await fetch('/api/check', {method: 'POST'});
+  setTimeout(() => { e.target.disabled = false; tick(); }, 1500);
+});
+window.addEventListener('resize', () => last && drawChart(last.series));
+
+tick();
+setInterval(tick, 1000);
+</script>
+</body>
+</html>

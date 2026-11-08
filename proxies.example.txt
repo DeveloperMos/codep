@@ -1,0 +1,9 @@
+# codep proxy list: ~/.config/codep/proxies.txt
+# One proxy per line, or several on a line separated by commas.
+# Format: ip:port:login:password (the password may contain colons).
+# Lines without a scheme use the -type flag (socks5 by default); add a scheme to override.
+# Lines starting with # are ignored. The file is re-read automatically.
+
+1.2.3.4:8000:login:password
+5.6.7.8:8000:login:password, 9.10.11.12:8000:login:password
+http://13.14.15.16:3128:login:password
