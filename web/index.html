@@ -199,6 +199,7 @@ function ago(iso) {
   if (!iso) return '';
   const s = Math.max(0, Math.round((Date.now() - new Date(iso)) / 1000));
   if (s < 60) return 'less than a minute ago';
+  if (s < 3600) return Math.floor(s / 60) + 'm ago';
   return fmtDur(s - s % 60) + ' ago';
 }
 const hhmmss = d => new Date(d).toLocaleTimeString('en-GB', {hour12: false});

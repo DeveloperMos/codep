@@ -4,6 +4,13 @@
 
 Run VS Code through a proxy that needs a login and password. codep opens a separate VS Code window where everything goes through your proxy: the built-in browser, extensions, Copilot, and the commands you run in its terminal. Your regular VS Code keeps working without the proxy. If a proxy dies, codep switches to the next one on your list.
 
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/dashboard-dark.png">
+  <img src="docs/dashboard-light.png" alt="codep dashboard: active proxy, traffic counters, 5-minute throughput chart, proxy list with statuses, event log">
+</picture>
+
+<sub>The codep dashboard with sample data.</sub>
+
 ## The problem
 
 Most paid proxies come as `ip:port:login:password`, and VS Code can't use them well:
@@ -146,7 +153,7 @@ A drop is counted when the proxy resets the connection mid-transfer, or closes i
 
 ## Dashboard
 
-http://127.0.0.1:1081, refreshed every second: active proxy and latency, open and total connections, traffic, drops, proxy failures, site errors, failovers, a 5-minute throughput chart, a table of all proxies with a "Make active" button, and the last 300 events. The same data as JSON: `curl http://127.0.0.1:1081/api/stats`.
+http://127.0.0.1:1081, refreshed every second: active proxy and latency, open and total connections, traffic, drops, proxy failures, site errors, failovers, a 5-minute throughput chart, a table of all proxies with a "Make active" button, and the last 300 events (see the [screenshot](#codep) at the top). The same data as JSON: `curl http://127.0.0.1:1081/api/stats`.
 
 The dashboard has no password and listens on `127.0.0.1` only. It shows proxy logins but never passwords. Stats live in memory and reset when the bridge restarts.
 
